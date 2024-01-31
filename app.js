@@ -24,7 +24,11 @@ server.get("/donnees", async (req, res) => {
     //Ceci sera remplacé par un fetch ou un appel à la base de données
     // commentaire temp const donnees = require("./data/donneesTest.js");
 
-    const donneesRef =  await db.collection("test").get();
+    console.log(req.query);
+    const direction = req.query["order-direction"];
+    const limit = +req.query["limit"];
+
+    const donneesRef =  await db.collection("test").orderBy("user", direction).limit(limit).get();
     const donneesFinale = [];
 
     donneesRef.forEach((doc)=>{
