@@ -26,7 +26,7 @@ server.get("/donnees", async (req, res) => {
 
     console.log(req.query);
     const direction = req.query["order-direction"];
-    const limit = +req.query["limit"];
+    const limit = +req.query["limit"] || 1000;
 
     const donneesRef =  await db.collection("test").orderBy("user", direction).limit(limit).get();
     const donneesFinale = [];
