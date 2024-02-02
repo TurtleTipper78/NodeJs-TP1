@@ -89,6 +89,33 @@ server.post("/donnees", async (req, res) => {
     }
 });
 
+server.post("/donnees/initialiser", (req, res) => {
+    const donneesTest = require("./data/donneesTest.js");
+
+    donneesTest.forEach(async(element) => {
+        await db.collection("test").add(element);
+    });
+
+    res.statusCode = 200;
+
+    res.json({
+        message: "Donne initialisées",
+    });
+    
+    
+});
+
+server.put("/donnees/:id", async (req,res)=>{
+    const id = req.params.id;
+    const donneesModifiees = req.body;
+    //Validatio ici
+
+    await db.collection("test").doc(id).update(donneesModifiees);
+
+    res.statusCode = 200;
+    res.json({message: " La donnée a été modifiée"})
+});
+
 server.delete("/donnees/:id", async (req, res) => {
     const id = req.params.id;
 
