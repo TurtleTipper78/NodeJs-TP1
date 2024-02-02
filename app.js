@@ -3,7 +3,7 @@ const dotenv = require("dotenv");
 const fs = require("fs");
 const path = require("path");
 const mustacheExpress = require("mustache-express");
-const db = require("./config/db.js")
+const db = require("./config/db.js");
 
 //Configurations
 dotenv.config();
@@ -19,24 +19,31 @@ server.engine("mustache", mustacheExpress());
 //Doit être avant les routes/points d'accès
 server.use(express.static(path.join(__dirname, "public")));
 
+//Permet d'accepter des body en Json dans les requêtes
+server.use(express.json());
+
 // Points d'accès
 server.get("/donnees", async (req, res) => {
-    //Ceci sera remplacé par un fetch ou un appel à la base de données
-    // commentaire temp const donnees = require("./data/donneesTest.js");
+    try {
+        //Ceci sera remplacé par un fetch ou un appel à la base de données
+        // const donnees = require("./data/donneesTest.js");
+        console.log(req.query);
+        const direction = req.query["order-direction"] || "asc";
+        const limit = +req.query["limit"] || 50; //Mettre une valeur par défaut
 
-    console.log(req.query);
-    const direction = req.query["order-direction"];
-    const limit = +req.query["limit"] || 1000;
+        const donneesRef = await db.collection("test").orderBy("user", direction).limit(limit).get();
+        const donneesFinale = [];
 
-    const donneesRef =  await db.collection("test").orderBy("user", direction).limit(limit).get();
-    const donneesFinale = [];
+        donneesRef.forEach((doc) => {
+            donneesFinale.push(doc.data());
+        });
 
-    donneesRef.forEach((doc)=>{
-        donneesFinale.push(doc.data());
-    })
-
-    res.statusCode = 200;
-    res.json(donneesFinale);
+        res.statusCode = 200;
+        res.json(donneesFinale);
+    } catch (erreur) {
+        res.statusCode = 500;
+        res.json({ message: "Une erreur est survenue. Meilleure chance la prochaine fois" });
+    }
 });
 
 /**
@@ -60,6 +67,35 @@ server.get("/donnees/:id", (req, res) => {
         res.statusCode = 404;
         res.json({ message: "Utilisateur non trouvé" });
     }
+});
+
+server.post("/donnees", async (req, res) => {
+    try {
+        const test = req.body;
+
+        //Validation des données
+        if (test.user == undefined) {
+            res.statusCode = 400;
+            return res.json({ message: "Vous devez fournir un utilisateur" });
+        }
+
+        await db.collection("test").add(test);
+
+        res.statusCode = 201;
+        res.json({ message: "La donnée a été ajoutée", donnees: test });
+    } catch (error) {
+        res.statusCode = 500;
+        res.json({ message: "erreur" });
+    }
+});
+
+server.delete("/donnees/:id", async (req, res) => {
+    const id = req.params.id;
+
+    const resultat = await db.collection("test").doc(id).delete();
+
+    res.statusCode = 200;
+    res.json({ message: "Le document a été supprimé" });
 });
 
 // DOIT Être la dernière!!
