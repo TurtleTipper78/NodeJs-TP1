@@ -123,14 +123,43 @@ server.delete("/donnees/:id", async (req, res) => {
     res.json({ message: "Le document a été supprimé" });
 });
 
-server.post("/utilisateurs/inscription", (req, res) => {
+server.post("/utilisateurs/inscription", async (req, res) => {
     // On récupère les infos du body
+
+    // const courriel = req.body.courriel;
+    // const mdp = req.body.mdp;
+
+    const { courriel, mdp } = req.body;
+
     // On vérifie si le courriel existe
-    // Si oui, erreur
+    const docRef = await db.collection("utilisateurs").where("courriel", "==", courriel).get();
+    const utilisateurs = [];
+
+    docRef.forEach((doc) => {
+        utilisateurs.push(doc.data());
+    });
+
+    console.log(utilisateurs);
+    // TODO: Si oui, erreur
+
+    if(utilisateurs.length > 0){
+        res.statusCode = 400;
+        res.json({message:"Le courriel existe déjà"});
+    }
+
     // On valide/nettoie la donnée
+    // TODO:
     // On encrypte le mot de passe
-    // On enregistre
+    // TODO:
+
+    // On enregistre dans la DB
+    const nouvelUtilisateur = {courriel,mdp};
+    await db.collection("utilisateurs").add(nouvelUtilisateur)
+
+    delete nouvelUtilisateur.mdp;
     // On renvoie true;
+    res.statusCode = 200;
+    res.json(nouvelUtilisateur);
 });
 
 server.post("/utilisateurs/connexion", (req, res) => {
@@ -141,7 +170,10 @@ server.post("/utilisateurs/connexion", (req, res) => {
     // On compare
     // Si pas pareil, erreur
     // On retourne les infos de l'utilisateur sans le mot de passe
+    res.json("patate");
 });
+
+
 // DOIT Être la dernière!!
 // Gestion page 404 - requête non trouvée
 
