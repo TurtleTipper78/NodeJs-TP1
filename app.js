@@ -92,28 +92,26 @@ server.post("/donnees", async (req, res) => {
 server.post("/donnees/initialiser", (req, res) => {
     const donneesTest = require("./data/donneesTest.js");
 
-    donneesTest.forEach(async(element) => {
+    donneesTest.forEach(async (element) => {
         await db.collection("test").add(element);
     });
 
     res.statusCode = 200;
 
     res.json({
-        message: "Donne initialisées",
+        message: "Données initialisées",
     });
-    
-    
 });
 
-server.put("/donnees/:id", async (req,res)=>{
+server.put("/donnees/:id", async (req, res) => {
     const id = req.params.id;
     const donneesModifiees = req.body;
-    //Validatio ici
+    //Validation ici
 
     await db.collection("test").doc(id).update(donneesModifiees);
 
     res.statusCode = 200;
-    res.json({message: " La donnée a été modifiée"})
+    res.json({ message: "La donnée a été modifiée" });
 });
 
 server.delete("/donnees/:id", async (req, res) => {
@@ -125,6 +123,25 @@ server.delete("/donnees/:id", async (req, res) => {
     res.json({ message: "Le document a été supprimé" });
 });
 
+server.post("/utilisateurs/inscription", (req, res) => {
+    // On récupère les infos du body
+    // On vérifie si le courriel existe
+    // Si oui, erreur
+    // On valide/nettoie la donnée
+    // On encrypte le mot de passe
+    // On enregistre
+    // On renvoie true;
+});
+
+server.post("/utilisateurs/connexion", (req, res) => {
+    // On récupère les infos du body
+    // On vérifie si le courriel existe
+    // Si non, erreur
+    // On encrypte le mot de passe
+    // On compare
+    // Si pas pareil, erreur
+    // On retourne les infos de l'utilisateur sans le mot de passe
+});
 // DOIT Être la dernière!!
 // Gestion page 404 - requête non trouvée
 
