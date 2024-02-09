@@ -2,17 +2,15 @@ const express = require("express");
 const dotenv = require("dotenv");
 const fs = require("fs");
 const path = require("path");
+const mustacheExpress = require("mustache-express");
 const db = require("./config/db.js");
 const bcrypt = require("bcrypt");
-const mustacheExpress = require("mustache-express");
-
 const {check, validationResult} = require("express-validator")
 
 //Configurations
 dotenv.config();
 
 const server = express();
-////////////////
 
 server.set("views", path.join(__dirname, "views"));
 server.set("view engine", "mustache");
@@ -25,42 +23,112 @@ server.use(express.static(path.join(__dirname, "public")));
 //Permet d'accepter des body en Json dans les requêtes
 server.use(express.json());
 
-// Points d'accès
+// Points d'accès films
 server.get("/films", async (req, res) => {
     try {
-        console.log(req.headers.authorization);
-        //Ceci sera remplacé par un fetch ou un appel à la base de données
-        // const films = require("./data/filmsTest.js");
         console.log(req.query);
         const direction = req.query["order-direction"] || "asc";
-        const limit = +req.query["limit"] || 50; //Mettre une valeur par défaut
+        const limit = +req.query["limit"] || 100; 
 
-        const filmsRef = await db.collection("test").orderBy("user", direction).limit(limit).get();
-        const filmsFinale = [];
+        const donneesRef = await db.collection("film").orderBy("titre", direction).limit(limit).get();
+        const donneesFinale = [];
 
         donneesRef.forEach((doc) => {
-            filmsFinale.push(doc.data());
+            donneesFinale.push(doc.data());
         });
 
         res.statusCode = 200;
-        res.json( filmsFinale);
+        res.json(donneesFinale);
     } catch (erreur) {
         res.statusCode = 500;
         res.json({ message: "Une erreur est survenue. Meilleure chance la prochaine fois" });
     }
 });
 
-/**
- * @method GET
- * @param id
- * @see url à consulter
- * Permet d'accéder à un utilisateur
- */
-server.get("/films/:id", (req, res) => {
-    // console.log(req.params.id);
-    const films = require("./data/filmsTest.js");
+//INIT FILM
 
-    const utilisateur = films.find((element) => {
+server.post("/films/initialiser", (req, res) => {
+    const donneesTest = require("./data/filmsTest.js");
+
+    donneesTest.forEach(async (element) => {
+        await db.collection("film").add(element);
+    });
+
+    res.statusCode = 200;
+
+    res.json({
+        message: "DB Film connecté",
+    });
+});
+
+//MODIFICATION FILM
+
+server.put("/films/:id", async (req, res) => {
+    const id = req.params.id;
+    const donneesModifiees = req.body;
+
+    await db.collection("test").doc(id).update(donneesModifiees);
+
+    res.statusCode = 200;
+    res.json({ message: "Le film a été modifiée" });
+});
+
+//DELETE FILM
+
+server.delete("/films/:id", async (req, res) => {
+    const id = req.params.id;
+
+    const resultat = await db.collection("test").doc(id).delete();
+
+    res.statusCode = 200;
+    res.json({ message: "Le film a été supprimé" });
+});
+
+//GET UTILISATEUR ALL
+
+server.get("/utilisateurs", async (req, res) => {
+    try {
+        console.log(req.query);
+        const direction = req.query["order-direction"] || "asc";
+        const limit = +req.query["limit"] || 100; 
+
+        const donneesRef = await db.collection("utilisateur").orderBy("courriel", direction).limit(limit).get();
+        const donneesFinale = [];
+
+        donneesRef.forEach((doc) => {
+            donneesFinale.push(doc.data());
+        });
+
+        res.statusCode = 200;
+        res.json(donneesFinale);
+    } catch (erreur) {
+        res.statusCode = 500;
+        res.json({ message: "Une erreur est survenue. Meilleure chance la prochaine fois" });
+    }
+});
+
+//INIT UTILISATEUR
+
+server.post("/utilisateurs/initialiser", (req, res) => {
+    const donneesTest = require("./data/utilisateurTest.js");
+
+    donneesTest.forEach(async (element) => {
+        await db.collection("utilisateur").add(element);
+    });
+
+    res.statusCode = 200;
+
+    res.json({
+        message: "DB Utilisateur connecté",
+    });
+});
+
+//GET UTILISATEUR ONE
+
+server.get("/utilisateurs/:id", (req, res) => {
+    const donnees = require("./data/utilisateurTest.js");
+
+    const utilisateur = donnees.find((element) => {
         return element.id == req.params.id;
     });
 
@@ -73,7 +141,11 @@ server.get("/films/:id", (req, res) => {
     }
 });
 
-server.post("/films", async (req, res) => {
+
+
+//POST UTILISATEUR
+
+server.post("/utilisateurs", async (req, res) => {
     try {
         const test = req.body;
 
@@ -86,46 +158,14 @@ server.post("/films", async (req, res) => {
         await db.collection("test").add(test);
 
         res.statusCode = 201;
-        res.json({ message: "Le film a été ajoutée", donnees: test });
+        res.json({ message: "L'utilisateur a été ajoutée", donnees: test });
     } catch (error) {
         res.statusCode = 500;
         res.json({ message: "erreur" });
     }
 });
 
-server.post("/films/initialiser", (req, res) => {
-    const filmsTest = require("./data/filmsTest.js");
-
-    filmsTest.forEach(async (element) => {
-        await db.collection("test").add(element);
-    });
-
-    res.statusCode = 200;
-
-    res.json({
-        message: "Films initialisées",
-    });
-});
-
-server.put("/films/:id", async (req, res) => {
-    const id = req.params.id;
-    const filmsModifiees = req.body;
-    //Validation ici
-
-    await db.collection("test").doc(id).update(filmsModifiees);
-
-    res.statusCode = 200;
-    res.json({ message: "Le Film a été modifiée" });
-});
-
-server.delete("/films/:id", async (req, res) => {
-    const id = req.params.id;
-
-    const resultat = await db.collection("test").doc(id).delete();
-
-    res.statusCode = 200;
-    res.json({ message: "Le film a été supprimé" });
-});
+//INSCRIPTION UTILISATEUR
 
 server.post("/utilisateurs/inscription",[
     check("courriel").escape().trim().notEmpty().normalizeEmail(),
@@ -183,6 +223,8 @@ async (req, res) => {
     res.statusCode = 200;
     res.json(nouvelUtilisateur);
 });
+
+//CONNEXION UTILISATEUR
 
 server.post("/utilisateurs/connexion", async (req, res) => {
     // On récupère les infos du body
