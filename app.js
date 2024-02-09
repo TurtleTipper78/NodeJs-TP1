@@ -2,8 +2,11 @@ const express = require("express");
 const dotenv = require("dotenv");
 const fs = require("fs");
 const path = require("path");
-const mustacheExpress = require("mustache-express");
 const db = require("./config/db.js");
+const bcrypt = require("bcrypt");
+const mustacheExpress = require("mustache-express");
+
+const {check, validationResult} = require("express-validator")
 
 //Configurations
 dotenv.config();
@@ -23,23 +26,24 @@ server.use(express.static(path.join(__dirname, "public")));
 server.use(express.json());
 
 // Points d'accès
-server.get("/donnees", async (req, res) => {
+server.get("/films", async (req, res) => {
     try {
+        console.log(req.headers.authorization);
         //Ceci sera remplacé par un fetch ou un appel à la base de données
-        // const donnees = require("./data/donneesTest.js");
+        // const films = require("./data/filmsTest.js");
         console.log(req.query);
         const direction = req.query["order-direction"] || "asc";
         const limit = +req.query["limit"] || 50; //Mettre une valeur par défaut
 
-        const donneesRef = await db.collection("test").orderBy("user", direction).limit(limit).get();
-        const donneesFinale = [];
+        const filmsRef = await db.collection("test").orderBy("user", direction).limit(limit).get();
+        const filmsFinale = [];
 
         donneesRef.forEach((doc) => {
-            donneesFinale.push(doc.data());
+            filmsFinale.push(doc.data());
         });
 
         res.statusCode = 200;
-        res.json(donneesFinale);
+        res.json( filmsFinale);
     } catch (erreur) {
         res.statusCode = 500;
         res.json({ message: "Une erreur est survenue. Meilleure chance la prochaine fois" });
@@ -52,11 +56,11 @@ server.get("/donnees", async (req, res) => {
  * @see url à consulter
  * Permet d'accéder à un utilisateur
  */
-server.get("/donnees/:id", (req, res) => {
+server.get("/films/:id", (req, res) => {
     // console.log(req.params.id);
-    const donnees = require("./data/donneesTest.js");
+    const films = require("./data/filmsTest.js");
 
-    const utilisateur = donnees.find((element) => {
+    const utilisateur = films.find((element) => {
         return element.id == req.params.id;
     });
 
@@ -69,7 +73,7 @@ server.get("/donnees/:id", (req, res) => {
     }
 });
 
-server.post("/donnees", async (req, res) => {
+server.post("/films", async (req, res) => {
     try {
         const test = req.body;
 
@@ -82,55 +86,71 @@ server.post("/donnees", async (req, res) => {
         await db.collection("test").add(test);
 
         res.statusCode = 201;
-        res.json({ message: "La donnée a été ajoutée", donnees: test });
+        res.json({ message: "Le film a été ajoutée", donnees: test });
     } catch (error) {
         res.statusCode = 500;
         res.json({ message: "erreur" });
     }
 });
 
-server.post("/donnees/initialiser", (req, res) => {
-    const donneesTest = require("./data/donneesTest.js");
+server.post("/films/initialiser", (req, res) => {
+    const filmsTest = require("./data/filmsTest.js");
 
-    donneesTest.forEach(async (element) => {
+    filmsTest.forEach(async (element) => {
         await db.collection("test").add(element);
     });
 
     res.statusCode = 200;
 
     res.json({
-        message: "Données initialisées",
+        message: "Films initialisées",
     });
 });
 
-server.put("/donnees/:id", async (req, res) => {
+server.put("/films/:id", async (req, res) => {
     const id = req.params.id;
-    const donneesModifiees = req.body;
+    const filmsModifiees = req.body;
     //Validation ici
 
-    await db.collection("test").doc(id).update(donneesModifiees);
+    await db.collection("test").doc(id).update(filmsModifiees);
 
     res.statusCode = 200;
-    res.json({ message: "La donnée a été modifiée" });
+    res.json({ message: "Le Film a été modifiée" });
 });
 
-server.delete("/donnees/:id", async (req, res) => {
+server.delete("/films/:id", async (req, res) => {
     const id = req.params.id;
 
     const resultat = await db.collection("test").doc(id).delete();
 
     res.statusCode = 200;
-    res.json({ message: "Le document a été supprimé" });
+    res.json({ message: "Le film a été supprimé" });
 });
 
-server.post("/utilisateurs/inscription", async (req, res) => {
+server.post("/utilisateurs/inscription",[
+    check("courriel").escape().trim().notEmpty().normalizeEmail(),
+    check("mdp").escape().trim().notEmpty().isLength({min:8, max:20}).isStrongPassword({
+        minlength:8,
+        maxLength:20,
+        minLowercase:1,
+        minNumbers:1,
+        minUppercase:1,
+        minSymbols:1
+    })
+],
+async (req, res) => {
+    const validation = validationResult(req);
+    if (validation.errors.length > 0) {
+        res.statusCode = 400;
+        return res.json({ message: "Données non-conformes" });
+    }
     // On récupère les infos du body
 
     // const courriel = req.body.courriel;
     // const mdp = req.body.mdp;
 
     const { courriel, mdp } = req.body;
-
+    console.log(courriel);
     // On vérifie si le courriel existe
     const docRef = await db.collection("utilisateurs").where("courriel", "==", courriel).get();
     const utilisateurs = [];
@@ -149,11 +169,13 @@ server.post("/utilisateurs/inscription", async (req, res) => {
 
     // On valide/nettoie la donnée
     // TODO:
+
     // On encrypte le mot de passe
-    // TODO:
+    // process.env.SALT
+    const hash = await bcrypt.hash(mdp,10 );
 
     // On enregistre dans la DB
-    const nouvelUtilisateur = {courriel,mdp};
+    const nouvelUtilisateur = {courriel, "mdp": hash};
     await db.collection("utilisateurs").add(nouvelUtilisateur)
 
     delete nouvelUtilisateur.mdp;
@@ -162,15 +184,36 @@ server.post("/utilisateurs/inscription", async (req, res) => {
     res.json(nouvelUtilisateur);
 });
 
-server.post("/utilisateurs/connexion", (req, res) => {
+server.post("/utilisateurs/connexion", async (req, res) => {
     // On récupère les infos du body
+    const { mdp, courriel } = req.body;
+
     // On vérifie si le courriel existe
+    const docRef = await db.collection("utilisateurs").where("courriel", "==", courriel).get();
+
+    const utilisateurs = [];
+    docRef.forEach((utilisateur) => {
+        utilisateurs.push(utilisateur.data());
+    });
     // Si non, erreur
-    // On encrypte le mot de passe
+    if (utilisateurs.length == 0) {
+        res.statusCode = 400;
+        return res.json({ message: "Courriel invalide" });
+    }
+
+    const utilisateurAValider = utilisateurs[0];
+    const estValide = await bcrypt.compare(mdp,utilisateurAValider.mdp)
     // On compare
+    if (!estValide) {
+        res.statusCode = 400;
+        return res.json({ message: "Mot de passe invalide"});
+    }
+    
     // Si pas pareil, erreur
     // On retourne les infos de l'utilisateur sans le mot de passe
-    res.json("patate");
+    delete utilisateurAValider.mdp;
+    res.status = 200;
+    res.json(utilisateurAValider);
 });
 
 
