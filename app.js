@@ -23,8 +23,9 @@ server.use(express.static(path.join(__dirname, "public")));
 //Permet d'accepter des body en Json dans les requêtes
 server.use(express.json());
 
+////////////////////INIT////////////////////
 
-//INIT FILM
+// FILM DONE
 
 server.post("/films/initialiser", (req, res) => {
     const donneesTest = require("./data/filmsTest.js");
@@ -40,7 +41,28 @@ server.post("/films/initialiser", (req, res) => {
     });
 });
 
-// Points d'accès films
+// UTILISATEUR DONE
+
+server.post("/utilisateurs/initialiser", (req, res) => {
+    const donneesTest = require("./data/utilisateurTest.js");
+
+    donneesTest.forEach(async (element) => {
+        await db.collection("utilisateur").add(element);
+    });
+
+    res.statusCode = 200;
+
+    res.json({
+        message: "DB Utilisateur connecté",
+    });
+});
+
+///////////////////////////////////////////
+
+////////////////////GET////////////////////
+
+//FILM LISTE
+
 server.get("/films/liste", async (req, res) => {
     try {
         console.log(req.query);
@@ -62,30 +84,7 @@ server.get("/films/liste", async (req, res) => {
     }
 });
 
-//MODIFICATION FILM
-
-server.put("/films/:id", async (req, res) => {
-    const id = req.params.id;
-    const donneesModifiees = req.body;
-
-    await db.collection("test").doc(id).update(donneesModifiees);
-
-    res.statusCode = 200;
-    res.json({ message: "Le film a été modifiée" });
-});
-
-//DELETE FILM
-
-server.delete("/films/:id", async (req, res) => {
-    const id = req.params.id;
-
-    const resultat = await db.collection("test").doc(id).delete();
-
-    res.statusCode = 200;
-    res.json({ message: "Le film a été supprimé" });
-});
-
-//GET UTILISATEUR ALL
+//UTILISATEUR LISTE
 
 server.get("/utilisateurs/liste", async (req, res) => {
     try {
@@ -108,41 +107,90 @@ server.get("/utilisateurs/liste", async (req, res) => {
     }
 });
 
-//INIT UTILISATEUR
+//FILMS ID
 
-server.post("/utilisateurs/initialiser", (req, res) => {
-    const donneesTest = require("./data/utilisateurTest.js");
 
-    donneesTest.forEach(async (element) => {
-        await db.collection("utilisateur").add(element);
-    });
+    // const donneesFilms = require("./data/filmsTest.js");
+    // console.log(req.params.id)
+    // const film = donneesFilms.find((element) => {
+    //     return element.id == req.params.id;
+    // });
+    // if (film) {
+    //     res.statusCode = 200;
+    //     res.json(film);
+    // } else {
+    //     res.statusCode = 404;
+    //     res.json({ message: "Film non trouvé" });
+    // }
 
-    res.statusCode = 200;
 
-    res.json({
-        message: "DB Utilisateur connecté",
-    });
-});
+    // server.delete("/films/:id", async (req, res) => {
+    //     const id = req.params.id;
+    
+    //     const resultat = await db.collection("film").doc(id).delete();
+    
+    //     res.statusCode = 200;
+    //     res.json({ message: "Le film a été supprimé" });
+    // });
 
-//GET UTILISATEUR ONE
+// server.get("/films/:id", async (req, res) => {
 
-server.get("/utilisateurs/:id", (req, res) => {
-    const donnees = require("./data/utilisateurTest.js");
+//     const filmsId = req.params.id;
 
-    const utilisateur = donnees.find((element) => {
-        return element.id == req.params.id;
-    });
+//     const donneesRef = await db.collection("film").doc(filmsId).get();
+//     const donneesFinale = [];
 
-    if (utilisateur) {
+//     donneesRef.forEach((doc) => {
+//         donneesFinale.push(doc.data());
+//     });
+
+//     console.log(req.params.id)
+//     if (donneesFinale) {
+//             res.statusCode = 200;
+//             res.json(donneesFinale);
+//         } else {
+//             res.statusCode = 404;
+//             res.json({ message: "Film non trouvé" });
+//         }
+// });
+server.get("/films/:id", async (req, res) => {
+    const filmId = req.params.id;
+
+    
+    const donneeRef = await db.collection("film").doc(filmId).get();
+
+    const donnee = donneeRef.data();
+
+    if (donnee) {
         res.statusCode = 200;
-        res.json(utilisateur);
+        res.json(donnee);
     } else {
         res.statusCode = 404;
-        res.json({ message: "Utilisateur non trouvé" });
+        res.json({ message: "film non trouvé" });
+    }
+    
+});
+
+//UTILISATEUR ID
+
+server.get("/utilisateurs/:id", async (req, res) => {
+    const utilisateurId = req.params.id;
+
+    
+    const donneeRef = await db.collection("utilisateur").doc(utilisateurId).get();
+
+    const donnee = donneeRef.data();
+
+    if (donnee) {
+        res.statusCode = 200;
+        res.json(donnee);
+    } else {
+        res.statusCode = 404;
+        res.json({ message: "utilisateur non trouvé" });
     }
 });
 
-
+///////////////////////////////////////////
 
 //POST UTILISATEUR
 
@@ -156,7 +204,7 @@ server.post("/utilisateurs", async (req, res) => {
             return res.json({ message: "Vous devez fournir un utilisateur" });
         }
 
-        await db.collection("test").add(test);
+        await db.collection("utilisateur").add(test);
 
         res.statusCode = 201;
         res.json({ message: "L'utilisateur a été ajoutée", donnees: test });
@@ -258,6 +306,37 @@ server.post("/utilisateurs/connexion", async (req, res) => {
     res.status = 200;
     res.json(utilisateurAValider);
 });
+
+////////////////////PUT////////////////////
+
+//MODIFICATION FILM
+
+server.put("/films/:id", async (req, res) => {
+    const id = req.params.id;
+    const donneesModifiees = req.body;
+
+    await db.collection("films").doc(id).update(donneesModifiees);
+
+    res.statusCode = 200;
+    res.json({ message: "Le film a été modifiée" });
+});
+
+///////////////////////////////////////////
+
+////////////////////DELETE////////////////////
+
+//DELETE FILM
+
+server.delete("/films/:id", async (req, res) => {
+    const id = req.params.id;
+
+    const resultat = await db.collection("film").doc(id).delete();
+
+    res.statusCode = 200;
+    res.json({ message: "Le film a été supprimé" });
+});
+
+///////////////////////////////////////////
 
 
 // DOIT Être la dernière!!
