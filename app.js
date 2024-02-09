@@ -23,8 +23,25 @@ server.use(express.static(path.join(__dirname, "public")));
 //Permet d'accepter des body en Json dans les requêtes
 server.use(express.json());
 
+
+//INIT FILM
+
+server.post("/films/initialiser", (req, res) => {
+    const donneesTest = require("./data/filmsTest.js");
+
+    donneesTest.forEach(async (element) => {
+        await db.collection("film").add(element);
+    });
+
+    res.statusCode = 200;
+
+    res.json({
+        message: "DB Film connecté",
+    });
+});
+
 // Points d'accès films
-server.get("/films", async (req, res) => {
+server.get("/films/liste", async (req, res) => {
     try {
         console.log(req.query);
         const direction = req.query["order-direction"] || "asc";
@@ -43,22 +60,6 @@ server.get("/films", async (req, res) => {
         res.statusCode = 500;
         res.json({ message: "Une erreur est survenue. Meilleure chance la prochaine fois" });
     }
-});
-
-//INIT FILM
-
-server.post("/films/initialiser", (req, res) => {
-    const donneesTest = require("./data/filmsTest.js");
-
-    donneesTest.forEach(async (element) => {
-        await db.collection("film").add(element);
-    });
-
-    res.statusCode = 200;
-
-    res.json({
-        message: "DB Film connecté",
-    });
 });
 
 //MODIFICATION FILM
@@ -86,7 +87,7 @@ server.delete("/films/:id", async (req, res) => {
 
 //GET UTILISATEUR ALL
 
-server.get("/utilisateurs", async (req, res) => {
+server.get("/utilisateurs/liste", async (req, res) => {
     try {
         console.log(req.query);
         const direction = req.query["order-direction"] || "asc";
