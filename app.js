@@ -109,50 +109,6 @@ server.get("/utilisateurs/liste", async (req, res) => {
 
 //FILMS ID
 
-
-    // const donneesFilms = require("./data/filmsTest.js");
-    // console.log(req.params.id)
-    // const film = donneesFilms.find((element) => {
-    //     return element.id == req.params.id;
-    // });
-    // if (film) {
-    //     res.statusCode = 200;
-    //     res.json(film);
-    // } else {
-    //     res.statusCode = 404;
-    //     res.json({ message: "Film non trouvé" });
-    // }
-
-
-    // server.delete("/films/:id", async (req, res) => {
-    //     const id = req.params.id;
-    
-    //     const resultat = await db.collection("film").doc(id).delete();
-    
-    //     res.statusCode = 200;
-    //     res.json({ message: "Le film a été supprimé" });
-    // });
-
-// server.get("/films/:id", async (req, res) => {
-
-//     const filmsId = req.params.id;
-
-//     const donneesRef = await db.collection("film").doc(filmsId).get();
-//     const donneesFinale = [];
-
-//     donneesRef.forEach((doc) => {
-//         donneesFinale.push(doc.data());
-//     });
-
-//     console.log(req.params.id)
-//     if (donneesFinale) {
-//             res.statusCode = 200;
-//             res.json(donneesFinale);
-//         } else {
-//             res.statusCode = 404;
-//             res.json({ message: "Film non trouvé" });
-//         }
-// });
 server.get("/films/:id", async (req, res) => {
     const filmId = req.params.id;
 
