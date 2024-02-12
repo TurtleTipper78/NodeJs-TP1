@@ -61,26 +61,31 @@ server.post("/utilisateurs/initialiser", (req, res) => {
 
 ////////////////////GET////////////////////
 
-//FILM LISTE
+//FILM LISTE , tri == "annee", tri == "realisateur"
 
-server.get("/films/liste", async (req, res) => {
+server.get("/films", async (req, res) => {
     try {
         console.log(req.query);
+        
+        const tri = req.query.tri || "titre";
         const direction = req.query["order-direction"] || "asc";
         const limit = +req.query["limit"] || 100; 
 
-        const donneesRef = await db.collection("film").orderBy("titre", direction).limit(limit).get();
-        const donneesFinale = [];
+        if (tri == "titre" || tri == "annee" || tri == "realisation") {
+            const donneesRef = await db.collection("film").orderBy(tri, direction).limit(limit).get();
+            const donneesFinale = [];
 
-        donneesRef.forEach((doc) => {
-            donneesFinale.push(doc.data());
-        });
+            donneesRef.forEach((doc) => {
+                donneesFinale.push(doc.data());
+            });
 
-        res.statusCode = 200;
-        res.json(donneesFinale);
+            res.statusCode = 200;
+            res.json(donneesFinale);
+        }
+
     } catch (erreur) {
         res.statusCode = 500;
-        res.json({ message: "Une erreur est survenue. Meilleure chance la prochaine fois" });
+        res.json({ message: "Vous êtes un pas bon" });
     }
 });
 
@@ -103,7 +108,7 @@ server.get("/utilisateurs/liste", async (req, res) => {
         res.json(donneesFinale);
     } catch (erreur) {
         res.statusCode = 500;
-        res.json({ message: "Une erreur est survenue. Meilleure chance la prochaine fois" });
+        res.json({ message: "Vous êtes un pas bon" });
     }
 });
 
@@ -112,7 +117,6 @@ server.get("/utilisateurs/liste", async (req, res) => {
 server.get("/films/:id", async (req, res) => {
     const filmId = req.params.id;
 
-    
     const donneeRef = await db.collection("film").doc(filmId).get();
 
     const donnee = donneeRef.data();
