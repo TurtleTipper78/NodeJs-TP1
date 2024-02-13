@@ -27,7 +27,10 @@ server.use(express.json());
 
 ////////////////////GET////////////////////
 
-//FILM GET
+/**
+ * Gère les requêtes GET pour récupérer les données des films.
+ * Prend en charge le tri et la pagination.
+ */
 
 server.get("/films", async (req, res) => {
 
@@ -66,9 +69,12 @@ server.get("/films", async (req, res) => {
     }
 });
 
-//UTILISATEUR GET
+/**
+ * Gère les requêtes GET pour récupérer les données des utilisateurs.
+ * Prend en charge le tri et la pagination.
+ */
 
-server.get("/utilisateurs", async (req, res) => {
+server.get("/utilisateur", async (req, res) => {
     try {
         console.log(req.query);
         const direction = req.query["order-direction"] || "asc";
@@ -103,7 +109,9 @@ server.get("/utilisateurs", async (req, res) => {
     }
 });
 
-//FILMS ID
+/**
+ * Gère les requêtes GET pour récupérer un film spécifique par ID.
+ */
 
 server.get("/films/:id", async (req, res) => {
     try{
@@ -127,7 +135,9 @@ server.get("/films/:id", async (req, res) => {
     
 });
 
-//UTILISATEUR ID
+/**
+ * Gère les requêtes GET pour récupérer un utilisateur spécifique par ID.
+ */
 
 server.get("/utilisateurs/:id", async (req, res) => {
     try{
@@ -152,31 +162,12 @@ server.get("/utilisateurs/:id", async (req, res) => {
 
 ///////////////////////////////////////////
 
-//POST UTILISATEUR
+/**
+ * Gère les requêtes POST pour l'inscription d'un utilisateur.
+ * Valide les données d'entrée et chiffre le mot de passe avant de le stocker dans la base de données.
+ */
 
-// server.post("/utilisateurs", async (req, res) => {
-//     try {
-//         const test = req.body;
-
-//         //Validation des données
-//         if (test.user == undefined) {
-//             res.statusCode = 400;
-//             return res.json({ message: "Vous devez fournir un utilisateur" });
-//         }
-
-//         await db.collection("utilisateur").add(test);
-
-//         res.statusCode = 201;
-//         res.json({ message: "L'utilisateur a été ajoutée", donnees: test });
-//     } catch (error) {
-//         res.statusCode = 500;
-//         res.json({ message: "erreur" });
-//     }
-// });
-
-//INSCRIPTION UTILISATEUR
-
-server.post("/utilisateurs/inscription",[
+server.post("/utilisateur/inscription",[
     check("courriel").escape().trim().notEmpty().normalizeEmail(),
     check("mdp").escape().trim().notEmpty().isLength({min:8, max:20}).isStrongPassword({
         minlength:8,
@@ -202,7 +193,7 @@ async (req, res) => {
         const { courriel, mdp } = req.body;
         console.log(courriel);
         // On vérifie si le courriel existe
-        const docRef = await db.collection("utilisateurs").where("courriel", "==", courriel).get();
+        const docRef = await db.collection("utilisateur").where("courriel", "==", courriel).get();
         const utilisateurs = [];
 
         docRef.forEach((doc) => {
@@ -226,7 +217,7 @@ async (req, res) => {
 
         // On enregistre dans la DB
         const nouvelUtilisateur = {courriel, "mdp": hash};
-        await db.collection("utilisateurs").add(nouvelUtilisateur)
+        await db.collection("utilisateur").add(nouvelUtilisateur)
 
         delete nouvelUtilisateur.mdp;
         // On renvoie true;
@@ -238,15 +229,18 @@ async (req, res) => {
     }
 });
 
-//CONNEXION UTILISATEUR
+/**
+ * Gère les requêtes POST pour la connexion de l'utilisateur.
+ * Compare les informations fournies avec les données stockées pour authentifier l'utilisateur.
+ */
 
-server.post("/utilisateurs/connexion", async (req, res) => {
+server.post("/utilisateur/connexion", async (req, res) => {
     try{
         // On récupère les infos du body
         const { mdp, courriel } = req.body;
 
         // On vérifie si le courriel existe
-        const docRef = await db.collection("utilisateurs").where("courriel", "==", courriel).get();
+        const docRef = await db.collection("utilisateur").where("courriel", "==", courriel).get();
 
         const utilisateurs = [];
         docRef.forEach((utilisateur) => {
@@ -278,10 +272,18 @@ server.post("/utilisateurs/connexion", async (req, res) => {
 });
 
 ////////////////////PUT////////////////////
+/**
+ * Gère les requêtes PUT pour mettre à jour les données d'un film.
+ */
 
-//MODIFICATION FILM
-
-server.put("/films/:id", async (req, res) => {
+server.put("/films/:id",[
+    check("annee").escape().trim().notEmpty(),
+    check("description").escape().trim().notEmpty(),
+    check("genres").escape().trim().notEmpty(),
+    check("realisation").escape().trim().notEmpty(),
+    check("titre").escape().trim().notEmpty(),
+    check("titreVignette").escape().trim().notEmpty(),
+], async (req, res) => {
     try{
         const id = req.params.id;
         const donneesModifiees = req.body;
@@ -296,11 +298,40 @@ server.put("/films/:id", async (req, res) => {
     }
 });
 
+
+/**
+ * Gère les requêtes PUT pour mettre à jour les données d'un utilisateur.
+ */
+
+server.put("/utilisateur/:id",[
+    check("annee").escape().trim().notEmpty(),
+    check("description").escape().trim().notEmpty(),
+    check("genres").escape().trim().notEmpty(),
+    check("realisation").escape().trim().notEmpty(),
+    check("titre").escape().trim().notEmpty(),
+    check("titreVignette").escape().trim().notEmpty(),
+], async (req, res) => {
+    try{
+        const id = req.params.id;
+        const donneesModifiees = req.body;
+
+        await db.collection("utilisateur").doc(id).update(donneesModifiees);
+
+        res.statusCode = 200;
+        res.json({ message: "L'utilisateur a été modifiée" });
+    }catch (error){
+        res.statusCode = 500;
+        res.json({ message: "Vous êtes un pas bon qui n'update pas" });
+    }
+});
+
 ///////////////////////////////////////////
 
 ////////////////////DELETE////////////////////
 
-//DELETE FILM
+/**
+ * Gère les requêtes DELETE pour supprimer un film de la base de données.
+ */
 
 server.delete("/films/:id", async (req, res) => {
     try{
