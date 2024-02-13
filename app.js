@@ -23,66 +23,33 @@ server.use(express.static(path.join(__dirname, "public")));
 //Permet d'accepter des body en Json dans les requêtes
 server.use(express.json());
 
-////////////////////INIT////////////////////
-
-// FILM DONE
-
-server.post("/films/initialiser", (req, res) => {
-    try{
-        const donneesTest = require("./data/filmsTest.js");
-
-        donneesTest.forEach(async (element) => {
-            await db.collection("film").add(element);
-        });
-
-        res.statusCode = 200;
-
-        res.json({
-            message: "DB Film connecté",
-        });
-    } catch (erreur) {
-        res.statusCode = 500;
-        res.json({ message: "Vous êtes un pas bon, film non-init" });
-    }
-});
-
-// UTILISATEUR DONE
-
-server.post("/utilisateurs/initialiser", (req, res) => {
-    try{
-        const donneesTest = require("./data/utilisateurTest.js");
-
-        donneesTest.forEach(async (element) => {
-            await db.collection("utilisateur").add(element);
-        });
-
-        res.statusCode = 200;
-
-        res.json({
-            message: "DB Utilisateur connecté",
-        });
-    } catch (erreur) {
-        res.statusCode = 500;
-        res.json({ message: "Vous êtes un pas bon, utilisateur non-init" });
-    }
-});
-
 ///////////////////////////////////////////
 
 ////////////////////GET////////////////////
 
-//FILM LISTE
+//FILM GET
 
 server.get("/films", async (req, res) => {
+
     try {
-        console.log(req.query);
-        
         const tri = req.query.tri || "titre";
         const direction = req.query["order-direction"] || "asc";
 
         if (tri == "titre" || tri == "realisation" || tri == "annee") {
             const donneesRef = await db.collection("film").orderBy(tri, direction).limit(50).get();
             const donneesFinale = [];
+
+            if(donneesRef.size <= 0){
+                    const donneesTest = require("./data/filmsTest.js");
+            
+                    donneesTest.forEach(async (element) => {
+                        await db.collection("film").add(element);
+                    });
+            
+                    return res.json({
+                        message: "DB Film connecté",
+                    });
+            }
 
             donneesRef.forEach((doc) => {
                 donneesFinale.push(doc.data());
@@ -91,6 +58,7 @@ server.get("/films", async (req, res) => {
             res.statusCode = 200;
             res.json(donneesFinale);
         }
+        
 
     } catch (erreur) {
         res.statusCode = 500;
@@ -98,7 +66,7 @@ server.get("/films", async (req, res) => {
     }
 });
 
-//UTILISATEUR LISTE
+//UTILISATEUR GET
 
 server.get("/utilisateurs", async (req, res) => {
     try {
@@ -108,6 +76,20 @@ server.get("/utilisateurs", async (req, res) => {
 
         const donneesRef = await db.collection("utilisateur").orderBy("courriel", direction).limit(limit).get();
         const donneesFinale = [];
+
+        if(donneesRef.size <= 0){
+            const donneesTest = require("./data/utilisateurTest.js");
+
+            donneesTest.forEach(async (element) => {
+                await db.collection("utilisateur").add(element);
+            });
+
+            res.statusCode = 200;
+
+            return res.json({
+                message: "DB Utilisateur connecté",
+        });
+        }
 
         donneesRef.forEach((doc) => {
             donneesFinale.push(doc.data());
@@ -164,7 +146,7 @@ server.get("/utilisateurs/:id", async (req, res) => {
         }
     }catch (error){
         res.statusCode = 500;
-        res.json({ message: "Vous êtes un pas bon" });
+        res.json({ message: "Vous êtes un pas bon, utilisateur non trouvé" });
     }
 });
 
@@ -304,7 +286,7 @@ server.put("/films/:id", async (req, res) => {
         const id = req.params.id;
         const donneesModifiees = req.body;
 
-        await db.collection("films").doc(id).update(donneesModifiees);
+        await db.collection("film").doc(id).update(donneesModifiees);
 
         res.statusCode = 200;
         res.json({ message: "Le film a été modifiée" });
