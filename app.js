@@ -28,33 +28,43 @@ server.use(express.json());
 // FILM DONE
 
 server.post("/films/initialiser", (req, res) => {
-    const donneesTest = require("./data/filmsTest.js");
+    try{
+        const donneesTest = require("./data/filmsTest.js");
 
-    donneesTest.forEach(async (element) => {
-        await db.collection("film").add(element);
-    });
+        donneesTest.forEach(async (element) => {
+            await db.collection("film").add(element);
+        });
 
-    res.statusCode = 200;
+        res.statusCode = 200;
 
-    res.json({
-        message: "DB Film connecté",
-    });
+        res.json({
+            message: "DB Film connecté",
+        });
+    } catch (erreur) {
+        res.statusCode = 500;
+        res.json({ message: "Vous êtes un pas bon, film non-init" });
+    }
 });
 
 // UTILISATEUR DONE
 
 server.post("/utilisateurs/initialiser", (req, res) => {
-    const donneesTest = require("./data/utilisateurTest.js");
+    try{
+        const donneesTest = require("./data/utilisateurTest.js");
 
-    donneesTest.forEach(async (element) => {
-        await db.collection("utilisateur").add(element);
-    });
+        donneesTest.forEach(async (element) => {
+            await db.collection("utilisateur").add(element);
+        });
 
-    res.statusCode = 200;
+        res.statusCode = 200;
 
-    res.json({
-        message: "DB Utilisateur connecté",
-    });
+        res.json({
+            message: "DB Utilisateur connecté",
+        });
+    } catch (erreur) {
+        res.statusCode = 500;
+        res.json({ message: "Vous êtes un pas bon, utilisateur non-init" });
+    }
 });
 
 ///////////////////////////////////////////
