@@ -347,6 +347,24 @@ server.delete("/films/:id", async (req, res) => {
     }    
 });
 
+/**
+ * Gère les requêtes DELETE pour supprimer un utilisateur de la base de données.
+ */
+
+server.delete("/utilisateur/:id", async (req, res) => {
+    try{
+        const id = req.params.id;
+
+        const resultat = await db.collection("utilisateur").doc(id).delete();
+
+        res.statusCode = 200;
+        res.json({ message: "L'utilisateur a été supprimé" });
+    }catch (error){
+        res.statusCode = 500;
+        res.json({ message: "Vous êtes un pas bon qui ne delete pas" });
+    }    
+});
+
 ///////////////////////////////////////////
 
 
