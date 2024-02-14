@@ -38,7 +38,7 @@ server.get("/films", async (req, res) => {
         const tri = req.query.tri || "titre";
         const direction = req.query["order-direction"] || "asc";
 
-        if (tri == "titre" || tri == "realisation" || tri == "annee") {
+        if (tri == "titre" || tri == "realisation" || tri == "annee" && direction == "asc" || direction == "desc") {
             const donneesRef = await db.collection("film").orderBy(tri, direction).limit(50).get();
             const donneesFinale = [];
 
