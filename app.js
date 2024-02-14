@@ -304,12 +304,15 @@ server.put("/films/:id",[
  */
 
 server.put("/utilisateur/:id",[
-    check("annee").escape().trim().notEmpty(),
-    check("description").escape().trim().notEmpty(),
-    check("genres").escape().trim().notEmpty(),
-    check("realisation").escape().trim().notEmpty(),
-    check("titre").escape().trim().notEmpty(),
-    check("titreVignette").escape().trim().notEmpty(),
+    check("courriel").escape().trim().notEmpty().normalizeEmail(),
+    check("mdp").escape().trim().notEmpty().isLength({min:8, max:20}).isStrongPassword({
+        minlength:8,
+        maxLength:20,
+        minLowercase:1,
+        minNumbers:1,
+        minUppercase:1,
+        minSymbols:1
+    })
 ], async (req, res) => {
     try{
         const id = req.params.id;
