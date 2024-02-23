@@ -6,6 +6,9 @@ const mustacheExpress = require("mustache-express");
 const db = require("./config/db.js");
 const bcrypt = require("bcrypt");
 const {check, validationResult} = require("express-validator")
+const cors = require("cors");
+
+app.use(cors())
 
 //Configurations
 dotenv.config();
