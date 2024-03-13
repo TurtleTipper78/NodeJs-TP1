@@ -6,9 +6,9 @@ const mustacheExpress = require("mustache-express");
 const db = require("./config/db.js");
 const bcrypt = require("bcrypt");
 const {check, validationResult} = require("express-validator")
+
 const cors = require("cors");
 
-app.use(cors())
 
 //Configurations
 dotenv.config();
@@ -25,7 +25,7 @@ server.use(express.static(path.join(__dirname, "public")));
 
 //Permet d'accepter des body en Json dans les requêtes
 server.use(express.json());
-
+server.use(cors())
 ///////////////////////////////////////////
 
 ////////////////////GET////////////////////
