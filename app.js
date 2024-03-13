@@ -8,6 +8,7 @@ const bcrypt = require("bcrypt");
 const {check, validationResult} = require("express-validator")
 const cors = require("cors");
 const jwt = require("jsonwebtoken");
+const auth = require("./middlewares/auth.js")
 
 //Configurations
 dotenv.config();
@@ -58,7 +59,7 @@ server.get("/films", async (req, res) => {
             }
 
             donneesRef.forEach((doc) => {
-                donneesFinale.push(doc.data());
+                donneesFinale.push({ id:doc.id,...doc.data()});
             });
 
             res.statusCode = 200;
@@ -355,7 +356,7 @@ server.put("/utilisateur/:id",[
  * Gère les requêtes DELETE pour supprimer un film de la base de données.
  */
 
-server.delete("/films/:id", async (req, res) => {
+server.delete("/films/:id", auth, async (req, res) => {
     try{
         const id = req.params.id;
 
