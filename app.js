@@ -6,9 +6,8 @@ const mustacheExpress = require("mustache-express");
 const db = require("./config/db.js");
 const bcrypt = require("bcrypt");
 const {check, validationResult} = require("express-validator")
-
 const cors = require("cors");
-
+const jwt = require("jsonwebtoken");
 
 //Configurations
 dotenv.config();
@@ -26,6 +25,7 @@ server.use(express.static(path.join(__dirname, "public")));
 //Permet d'accepter des body en Json dans les requêtes
 server.use(express.json());
 server.use(cors())
+
 ///////////////////////////////////////////
 
 ////////////////////GET////////////////////
@@ -244,11 +244,12 @@ server.post("/utilisateur/connexion", async (req, res) => {
 
         // On vérifie si le courriel existe
         const docRef = await db.collection("utilisateur").where("courriel", "==", courriel).get();
-
         const utilisateurs = [];
+
         docRef.forEach((utilisateur) => {
             utilisateurs.push(utilisateur.data());
         });
+
         // Si non, erreur
         if (utilisateurs.length == 0) {
             res.statusCode = 400;
@@ -262,12 +263,27 @@ server.post("/utilisateur/connexion", async (req, res) => {
             res.statusCode = 400;
             return res.json({ message: "Mot de passe invalide"});
         }
-        
         // Si pas pareil, erreur
         // On retourne les infos de l'utilisateur sans le mot de passe
         delete utilisateurAValider.mdp;
+
+        const donneeJeton= {
+            courriel:utilisateurs.courriel,
+            id: utilisateurs.id,
+        };
+
+        const options = {
+            expiresIn: "1d",
+        }
+
+        const jeton = jtw.sign(
+            donneeJeton,
+            process.env.JWT_SECRET,
+            options
+        ); 
+
         res.status = 200;
-        res.json(utilisateurAValider);
+        res.json(jeton);
     }catch (error){
         res.statusCode = 500;
         res.json({ message: "Vous êtes un pas bon qui se connecte pas" });
